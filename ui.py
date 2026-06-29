@@ -36,7 +36,7 @@ BORDER     = (30,  42,   30)
 _BH = CTRL_H - 12
 _BY = CTRL_Y + 6
 btn_prev = pygame.Rect(  4, _BY, 43, _BH)
-btn_rew  = pygame.Rect( 51, _BY, 43, _BH)
+btn_rev  = pygame.Rect( 51, _BY, 43, _BH)
 btn_play = pygame.Rect( 98, _BY, 44, _BH)
 btn_ff   = pygame.Rect(146, _BY, 43, _BH)
 btn_next = pygame.Rect(193, _BY, 43, _BH)
@@ -105,6 +105,7 @@ def draw_frame(screen, fonts, state):
     cy     = ART_Y + ART_H // 2
     seg_h  = max(1, (ART_H // 2 - 6 - (N_SEGS - 1)) // N_SEGS)
     stride = seg_h + 1
+
     for i in range(N_BARS):
         freq   = 1.2 + i * 0.15
         phase  = i * 0.55
@@ -112,6 +113,7 @@ def draw_frame(screen, fonts, state):
                   abs(math.sin(wave_t * freq * 0.6 + phase + 1.3)) * 0.3)
         filled = max(1, int(amp * N_SEGS))
         bx     = 3 + i * (bar_w + 3)
+
         for s in range(N_SEGS):
             v   = int(160 + s / max(1, N_SEGS - 1) * 95)
             c   = (v, v, v) if s < filled else (12, 12, 14)
@@ -160,13 +162,19 @@ def draw_frame(screen, fonts, state):
     pygame.draw.rect(screen, ACCENT, (kx, y - 2, 6, h + 4))
     pygame.draw.rect(screen, BORDER, seek_r, 1)
 
-    # controls
+    # controls panel
     pygame.draw.rect(screen, PANEL, (0, CTRL_Y, W, CTRL_H))
-    _btn(screen, btn_prev, "|<", f_btn)
-    _btn(screen, btn_rew,  "<<", f_btn)
+
+    # prev btn
+    _btn(screen, btn_prev, "|<", f_btn, pressed = state.get('btn_pressed') == 'prev')
+    # rev btn
+    _btn(screen, btn_rev,  "<<", f_btn, pressed = state.get('btn_pressed') == 'rev')
+    # play btn
     _btn(screen, btn_play, "||" if is_playing else ">", f_btn, active=is_playing)
-    _btn(screen, btn_ff,   ">>", f_btn)
-    _btn(screen, btn_next, ">|", f_btn)
+    # ff btn
+    _btn(screen, btn_ff,   ">>", f_btn, pressed = state.get('btn_pressed') == 'ff')
+    # next btn
+    _btn(screen, btn_next, ">|", f_btn, pressed = state.get('btn_pressed') == 'next')
 
     # volume / shuffle / repeat
     pygame.draw.rect(screen, PANEL, (0, VOL_Y, W, VOL_H))

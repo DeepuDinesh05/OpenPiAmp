@@ -37,5 +37,4 @@ def load_track(tracks, state, current_track_index):
     pygame.mixer.music.load(tracks[current_track_index])
     pygame.mixer.music.play()
     state['is_playing']  = True
-
         

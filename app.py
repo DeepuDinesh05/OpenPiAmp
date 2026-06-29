@@ -1,4 +1,5 @@
 import pygame
+import random
 
 import ui
 from config import *
@@ -30,7 +31,8 @@ state = {
     'is_playing':  True,
     'shuffle':     False,
     'repeat':      False,
-    'scroll_x' : 0
+    'scroll_x' :   0,
+    'btn_pressed': None
 }
 
 # scan music directory and init state with actual music data
@@ -48,16 +50,81 @@ while running:
         # Have to finalize driver support
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             p = event.pos
+
+            # Play button
             if ui.btn_play.collidepoint(p):
                 state['is_playing'] = not state['is_playing']
                 # print(state['is_playing'])
+
+             # FF button
+            if ui.btn_ff.collidepoint(p):
+                # trigger UI anim
+                state['btn_pressed'] = "ff"
+
+                # add FAST_FORWARD_DUR to current pos
+                new_pos = min(state['pos_s'] + FAST_FORWARD_DUR, state['dur'])
+
+                # if ff'd past clip duration while repeat is on
+                if new_pos >= state['dur'] and state['repeat']:
+                    # load same track
+                    load_track(tracks, state, state['track_idx'])
+                else:
+                    state['pos_s'] = new_pos
+                    pygame.mixer.music.play(start=new_pos)
+
+             # REV button
+            if ui.btn_rev.collidepoint(p):
+                # trigger UI anim
+                state['btn_pressed'] = "rev"
+
+                # sub REV_DUR from current pos
+                new_pos = max(state['pos_s'] - REV_DUR, 0.0)
+
+                # if rev'd past clip duration while repeat is on
+                if new_pos <= 0 and state['repeat']:
+                    # load same track
+                    load_track(tracks, state, state['track_idx'])
+                else:
+                    state['pos_s'] = new_pos
+                    pygame.mixer.music.play(start=new_pos)
+
+                state['pos_s'] = new_pos
+                pygame.mixer.music.play(start=new_pos)
             
+            # Shuffle button
             elif ui.btn_shf.collidepoint(p):
                 state['shuffle'] = not state['shuffle']
             
+            # Repeat button
             elif ui.btn_rpt.collidepoint(p):
                 state['repeat'] = not state['repeat']
-
+            
+            # Next button
+            elif ui.btn_next.collidepoint(p):
+                # UI anim
+                state['btn_pressed'] = "next"
+    
+                # current state + 1 % (modulus) length of tracks = 0 if last track
+                # next_idx = 0 if at last track and button input
+                next_idx = (state['track_idx'] + 1) % len(tracks)
+                load_track(tracks,state,next_idx)
+            
+            # Prev button
+            elif ui.btn_prev.collidepoint(p):
+                # UI anim
+                state['btn_pressed'] = "prev"
+    
+                # current state - 1 % (modulus) length of tracks = last track index if at first track
+                # prev_idx = last track index if at first track and button input
+                state['btn_pressed'] = "prev"
+                prev_idx = (state['track_idx'] - 1) % len(tracks)
+                load_track(tracks,state,prev_idx)
+        
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            # clear UI anim state
+                state['btn_pressed'] = None
+    
+    
     if state['is_playing']:
         pygame.mixer.music.unpause()
         state['wave_t'] += dt
@@ -72,6 +139,24 @@ while running:
 
         # 40 px/sec title scroll
         state['scroll_x'] = state.get('scroll_x', 0.0) + dt * TITLE_SCROLL_SPEED
+
+        # auto advance when current position greater than track length
+        if state['pos_s'] >= state['dur']:
+            # if repeat button is toggled on
+            if state['repeat']:
+                load_track(tracks, state, state['track_idx'])
+        
+            # if repeat button is toggled on
+            if state['shuffle']:
+                next_idx = random.randint(0, len(tracks) - 1)
+                load_track(tracks, state, next_idx)
+
+            # default behavior, advance to next clio
+            else:
+                next_idx = (state['track_idx'] + 1) % len(tracks)
+                load_track(tracks, state, next_idx)
+            
+            state['scroll_x'] = 0.0
     
     else:
         pygame.mixer.music.pause()
