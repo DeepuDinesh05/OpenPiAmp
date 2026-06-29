@@ -37,4 +37,30 @@ def load_track(tracks, state, current_track_index):
     pygame.mixer.music.load(tracks[current_track_index])
     pygame.mixer.music.play()
     state['is_playing']  = True
+
+# next track helper
+def next_track(tracks, state):
+    # if repeat
+    if state.get('repeat'):
+        load_track(tracks, state, state['track_idx'])
+    # if shuffle
+    elif state.get('shuffle'):
+        import random
+        load_track(tracks, state, random.randint(0, len(tracks) - 1))
+    # default behavior, auto advance
+    else:
+        # current state + 1 % (modulus) length of tracks = 0 if last track
+        # next_idx = 0 if at last track and button input
+        load_track(tracks, state, (state['track_idx'] + 1) % len(tracks))
+
+# prev track helper
+def prev_track(tracks, state):
+    # if shuffle
+    if state.get('shuffle'):
+        import random
+        load_track(tracks, state, random.randint(0, len(tracks) - 1))
+    else:
+        # current state - 1 % (modulus) length of tracks = last track index if at first track
+        # prev_idx = last track index if at first track and button input        
+        load_track(tracks, state, (state['track_idx'] - 1) % len(tracks))
         

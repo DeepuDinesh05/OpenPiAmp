@@ -103,23 +103,14 @@ while running:
             elif ui.btn_next.collidepoint(p):
                 # UI anim
                 state['btn_pressed'] = "next"
-    
-                # current state + 1 % (modulus) length of tracks = 0 if last track
-                # next_idx = 0 if at last track and button input
-                next_idx = (state['track_idx'] + 1) % len(tracks)
-                load_track(tracks,state,next_idx)
+                next_track(tracks,state)
             
             # Prev button
             elif ui.btn_prev.collidepoint(p):
                 # UI anim
                 state['btn_pressed'] = "prev"
-    
-                # current state - 1 % (modulus) length of tracks = last track index if at first track
-                # prev_idx = last track index if at first track and button input
-                state['btn_pressed'] = "prev"
-                prev_idx = (state['track_idx'] - 1) % len(tracks)
-                load_track(tracks,state,prev_idx)
-        
+                prev_track(tracks,state)
+                
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             # clear UI anim state
                 state['btn_pressed'] = None
@@ -142,21 +133,8 @@ while running:
 
         # auto advance when current position greater than track length
         if state['pos_s'] >= state['dur']:
-            # if repeat button is toggled on
-            if state['repeat']:
-                load_track(tracks, state, state['track_idx'])
-        
-            # if repeat button is toggled on
-            if state['shuffle']:
-                next_idx = random.randint(0, len(tracks) - 1)
-                load_track(tracks, state, next_idx)
-
-            # default behavior, advance to next clio
-            else:
-                next_idx = (state['track_idx'] + 1) % len(tracks)
-                load_track(tracks, state, next_idx)
-            
-            state['scroll_x'] = 0.0
+            next_track(tracks, state)
+            state['scroll_x'] = 0
     
     else:
         pygame.mixer.music.pause()
