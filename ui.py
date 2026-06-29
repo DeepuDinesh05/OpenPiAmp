@@ -1,8 +1,10 @@
 import math
 import pygame
+from config import *
 
 # dimensions
-W, H = 240, 320
+W = SCREEN_WIDTH
+H = SCREEN_HEIGHT
 
 ART_Y   = 0;   ART_H   = 174
 TITLE_Y = 174; TITLE_H = 22
@@ -126,9 +128,22 @@ def draw_frame(screen, fonts, state):
 
     # title
     pygame.draw.rect(screen, PANEL, (0, TITLE_Y, W, TITLE_H))
-    screen.set_clip(pygame.Rect(6, TITLE_Y, W - 12, TITLE_H))
-    screen.blit(f_title.render(track_name, True, FG), (6, TITLE_Y + 3))
-    screen.set_clip(None)
+    title_surf = f_title.render(track_name, True, FG)
+    title_width = title_surf.get_width()
+    # clip threshold
+    clip_width = W - 12
+
+    if title_width > clip_width:
+        scroll_x = int(state.get('scroll_x', 0.0)) % (title_width + 40)
+        screen.set_clip(pygame.Rect(6, TITLE_Y, clip_width, TITLE_H))
+        screen.blit(title_surf, (6 - scroll_x, TITLE_Y + 3))
+        # wrap-around copy so it loops seamlessly
+        screen.blit(title_surf, (6 - scroll_x + title_width + 40, TITLE_Y + 3))
+        screen.set_clip(None)
+    else:
+        screen.set_clip(pygame.Rect(6, TITLE_Y, clip_width, TITLE_H))
+        screen.blit(title_surf, (6, TITLE_Y + 3))
+        screen.set_clip(None)
 
     # seek
     pygame.draw.rect(screen, PANEL, (0, SEEK_Y, W, SEEK_H))
