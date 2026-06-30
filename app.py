@@ -37,6 +37,7 @@ state = {
 
 # scan music directory and init state with actual music data
 tracks = scan(MUSIC_DIR,state)
+pygame.mixer.music.set_volume(state['volume'])
 
 running = True
 while running:
@@ -51,8 +52,18 @@ while running:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             p = event.pos
 
+            # Volume button minus
+            if ui.btn_vol_minus.collidepoint(p):
+                state['volume'] = max(0.0, state['volume'] - VOLUME_STEP)
+                pygame.mixer.music.set_volume(state['volume'])
+
+            # Volume button plus
+            elif ui.btn_vol_plus.collidepoint(p):
+                state['volume'] = min(1.0, state['volume'] + VOLUME_STEP)
+                pygame.mixer.music.set_volume(state['volume'])
+
             # Play button
-            if ui.btn_play.collidepoint(p):
+            elif ui.btn_play.collidepoint(p):
                 state['is_playing'] = not state['is_playing']
                 # print(state['is_playing'])
 

@@ -22,6 +22,7 @@ def scan(folder, state):
     # fallback to filename if track name doesnt exist
     state['track_name']  = track_metadata.get('title') or os.path.splitext(os.path.basename(tracks[0]))[0]
     state['cover_art']   = track_metadata.get('image_data')
+    state['dur']         = track_metadata.get('duration') or 0.0
     state['pos_s']       = 0.0
     pygame.mixer.music.load(tracks[0])
     pygame.mixer.music.play()
@@ -37,6 +38,7 @@ def load_track(tracks, state, current_track_index):
     # fallback to filename if track name doesnt exist
     state['track_name']  = track_metadata.get('title') or os.path.splitext(os.path.basename(tracks[current_track_index]))[0]
     state['cover_art']   = track_metadata.get('image_data')
+    state['dur']         = track_metadata.get('duration') or 0.0
     state['pos_s']       = 0.0
     pygame.mixer.music.load(tracks[current_track_index])
     pygame.mixer.music.play()
@@ -70,14 +72,18 @@ def prev_track(tracks, state):
       
 # returns a dict of string title and an array of raw image data
 def get_metadata(filepath):
-    metadata = {'title': '', 'image_data': None}
-    
+    metadata = {'title': '', 'image_data': None, 'duration': 0.0}
+
     try:
-        clip = mutagen.File(filepath) 
-        
+        clip = mutagen.File(filepath)
+
         if clip is None:
             return metadata
-        
+
+        # Duration in seconds
+        if clip.info is not None:
+            metadata['duration'] = clip.info.length
+
         # Title extraction
         if 'TIT2' in clip:
             metadata['title'] = str(clip['TIT2'])        # MP3 ID3

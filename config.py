@@ -16,7 +16,8 @@ FAST_FORWARD_DUR = 15
 REV_DUR = 15
 
 # -------------- #
-#  UI Settings 
+#  UI Settings
 # -------------- #
 TITLE_SCROLL_SPEED = 20
+VOLUME_STEP = 0.1
 

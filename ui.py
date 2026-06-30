@@ -29,8 +29,12 @@ btn_next = pygame.Rect(193, _BY, 43, _BH)
 btn_shf  = pygame.Rect( 4,  VOL_Y + 7, 36, VOL_H - 14)
 btn_rpt  = pygame.Rect(44,  VOL_Y + 7, 36, VOL_H - 14)
 
+# volume row: [SHF][RPT]  "VOL" [=== bar ===][-][+]
+btn_vol_plus  = pygame.Rect(W - 4  - 28, VOL_Y + 7, 28, VOL_H - 14)
+btn_vol_minus = pygame.Rect(btn_vol_plus.x - 4 - 28, VOL_Y + 7, 28, VOL_H - 14)
+
 seek_r = pygame.Rect(32, SEEK_Y + 7, W - 64, 10)
-vol_r  = pygame.Rect(84, VOL_Y + 17, W - 88,  8)
+vol_r  = pygame.Rect(112, VOL_Y + 17, btn_vol_minus.x - 4 - 112, 8)
 
 # -------------- #
 #     Theme
@@ -231,11 +235,17 @@ def draw_control_panel(screen, font_button, font_general, volume, is_playing, st
     # next btn
     _btn(screen, btn_next, ">|", font_button, pressed = state.get('btn_pressed') == 'next')
 
-    # volume / shuffle / repeat
+    # shuffle / repeat / volume label
     pygame.draw.rect(screen, PANEL, (0, VOL_Y, W, VOL_H))
     _btn(screen, btn_shf, "SHF", font_general, active=state.get('shuffle', False))
     _btn(screen, btn_rpt, "RPT", font_general, active=state.get('repeat',  False))
+
+    vol_label = font_general.render("VOL", True, DIM)
+    screen.blit(vol_label, (84, VOL_Y + (VOL_H - vol_label.get_height()) // 2))
+
     _bar(screen, vol_r, volume, VOL_BG)
+    _btn(screen, btn_vol_minus, "-", font_general)
+    _btn(screen, btn_vol_plus,  "+", font_general)
 
 # Main draw loop
 def draw_frame(screen, fonts, state):
