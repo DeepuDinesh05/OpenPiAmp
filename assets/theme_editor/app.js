@@ -16,7 +16,8 @@ const DEFAULT_THEME = {
         ]
     },
     button: { radius: 0 },
-    cover_art: { mode: "fill" },
+    cover_art: { mode: "fill", no_cover_behavior: "visualizer" },
+    visualizer: { n_bars: 24, n_segs: 16 },
     layout: {
         panels: { art: 0.54375, title: 0.06875, seek: 0.075, ctrl: 0.18125 },
         ctrl_buttons: {
@@ -70,7 +71,8 @@ const radiusValue       = document.getElementById('radiusValue');
 const paletteGrid        = document.getElementById('paletteGrid');
 const loadInput          = document.getElementById('loadInput');
 const trackInput         = document.getElementById('trackInput');
-const coverArtModeSelect = document.getElementById('coverArtMode');
+const coverArtModeSelect    = document.getElementById('coverArtMode');
+const noCoverBehaviorSelect = document.getElementById('noCoverBehavior');
 
 // -------------- //
 //   Track state
@@ -93,18 +95,18 @@ function loadTrack(file) {
                     if (track.coverArt) URL.revokeObjectURL(track.coverArt._url);
                     img._url = url;
                     track.coverArt = img;
-                    drawPreview();
+                    updateVizState();
                 };
                 img.src = url;
             } else {
                 track.coverArt = null;
             }
-            drawPreview();
+            updateVizState();
         },
         onError: () => {
             track.title = file.name.replace(/\.[^.]+$/, '');
             track.coverArt = null;
-            drawPreview();
+            updateVizState();
         }
     });
 }
@@ -178,6 +180,71 @@ function computeLayout(W, H) {
     const volBar = rect(vb, panel.vol.y + Math.round(vb.y_off * panel.vol.h), Math.round(vb.h * panel.vol.h));
 
     return { panel, ctrlBtns, volBtns, seekBar, volBar };
+}
+
+// -------------- //
+//   Visualizer
+// -------------- //
+let waveT     = 0;
+let animFrame = null;
+
+function startViz() {
+    if (animFrame) return;
+    let last = null;
+    function step(ts) {
+        if (last !== null) waveT += (ts - last) / 1000;
+        last = ts;
+        drawPreview();
+        animFrame = requestAnimationFrame(step);
+    }
+    animFrame = requestAnimationFrame(step);
+}
+
+function stopViz() {
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    waveT = 0;
+}
+
+// mirrors ui.py's try_draw_visualizer() — only called when no cover art is loaded
+function drawVisualizer(W, panel) {
+    const p   = theme.palette;
+    const { n_bars, n_segs } = theme.visualizer;
+    const artY = panel.art.y, artH = panel.art.h;
+
+    ctx.fillStyle = rgb(p.ART_BG);
+    ctx.fillRect(0, artY, W, artH);
+
+    const cell_w = W / n_bars;
+    const bar_w  = Math.max(1, Math.floor(cell_w) - 2);
+    const cy     = artY + Math.floor(artH / 2);
+    const seg_h  = Math.max(1, Math.floor((artH / 2 - 6 - (n_segs - 1)) / n_segs));
+    const stride = seg_h + 1;
+
+    for (let i = 0; i < n_bars; i++) {
+        const freq  = 1.2 + i * 0.15;
+        const phase = i * 0.55;
+        const amp   = Math.abs(Math.sin(waveT * freq + phase)) * 0.7 +
+                      Math.abs(Math.sin(waveT * freq * 0.6 + phase + 1.3)) * 0.3;
+        const filled = Math.max(1, Math.floor(amp * n_segs));
+        const bx     = Math.floor(i * cell_w + 1);
+
+        for (let s = 0; s < n_segs; s++) {
+            const v   = Math.floor(160 + s / Math.max(1, n_segs - 1) * 95);
+            const lit = s < filled;
+            ctx.fillStyle = lit ? `rgb(${v},${v},${v})` : 'rgb(12,12,14)';
+            ctx.fillRect(bx, cy - (s + 1) * stride, bar_w, seg_h);
+            const vd = Math.floor(v / 6);
+            ctx.fillStyle = lit ? `rgb(${vd},${vd},${vd})` : 'rgb(4,4,5)';
+            ctx.fillRect(bx, cy + s * stride, bar_w, seg_h);
+        }
+    }
+}
+
+// start/stop the animation loop based on current track + behavior setting
+function updateVizState() {
+    const needsAnim = !track.coverArt && theme.cover_art.no_cover_behavior === 'visualizer';
+    needsAnim ? startViz() : stopViz();
+    if (!needsAnim) drawPreview();
 }
 
 // -------------- //
@@ -286,12 +353,12 @@ function drawPreview() {
         ctx.clip();
         ctx.drawImage(img, dx, dy, dw, dh);
         ctx.restore();
+    } else if (theme.cover_art.no_cover_behavior === 'visualizer') {
+        drawVisualizer(W, panel);
     } else {
-        ctx.fillStyle = rgb(p.DIM);
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('NO COVER ART', W / 2, panel.art.y + panel.art.h / 2);
+        // cassette tape placeholder — black until implemented
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, panel.art.y, W, panel.art.h);
     }
 
     // title panel
@@ -508,7 +575,8 @@ function populateControls() {
     orientationSelect.value        = theme.screen.orientation;
     radiusRange.value              = theme.button.radius;
     radiusValue.textContent        = theme.button.radius;
-    coverArtModeSelect.value       = theme.cover_art.mode;
+    coverArtModeSelect.value        = theme.cover_art.mode;
+    noCoverBehaviorSelect.value     = theme.cover_art.no_cover_behavior;
     populatePalette();
     syncLayoutControls();
 }
@@ -531,6 +599,11 @@ orientationSelect.addEventListener('change', () => {
 coverArtModeSelect.addEventListener('change', () => {
     theme.cover_art.mode = coverArtModeSelect.value;
     drawPreview();
+});
+
+noCoverBehaviorSelect.addEventListener('change', () => {
+    theme.cover_art.no_cover_behavior = noCoverBehaviorSelect.value;
+    updateVizState();
 });
 
 radiusRange.addEventListener('input', () => {
@@ -580,7 +653,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     track.title = 'Sample Track Title';
     track.coverArt = null;
     populateControls();
-    refresh();
+    updateVizState();
 });
 
 // -------------- //
@@ -592,7 +665,8 @@ buildLayoutControls();
 // fall back to the embedded default (fetch of a relative file fails under file://)
 if (window.location.protocol === 'file:') {
     populateControls();
-    refresh();
+    resizeCanvas();
+    updateVizState();
 } else {
     fetch('../theme.json')
         .then(r => r.ok ? r.json() : Promise.reject())
@@ -600,6 +674,7 @@ if (window.location.protocol === 'file:') {
         .catch(() => { theme = structuredClone(DEFAULT_THEME); })
         .finally(() => {
             populateControls();
-            refresh();
+            resizeCanvas();
+            updateVizState();
         });
 }

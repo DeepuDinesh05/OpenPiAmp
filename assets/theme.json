@@ -13,7 +13,12 @@
     "radius": 0
   },
   "cover_art": {
-    "mode": "fill"
+    "mode": "fill",
+    "no_cover_behavior": "visualizer"
+  },
+  "visualizer": {
+    "n_bars": 24,
+    "n_segs": 16
   },
   "layout": {
     "panels": {
