@@ -2,6 +2,7 @@ import math
 import pygame
 import io
 
+import cover_art_loader
 from config import *
 
 # -------------- #
@@ -106,69 +107,6 @@ def _btn(surf, rect, label, font, pressed=False, active=False):
     surf.blit(txt, (rect.x + (rect.w - txt.get_width())  // 2 + ox,
                     rect.y + (rect.h - txt.get_height()) // 2 + oy))
 
-# Cover Art Panel
-def try_draw_cover_art(screen,state):
-    # cover art / fallback
-    art_rect = pygame.Rect(0, ART_Y, W, ART_H)
-    pygame.draw.rect(screen, ART_BG, art_rect)
-
-    cover_bytes = state.get('cover_art')
-    
-    if cover_bytes:
-        try:
-            img = pygame.image.load(io.BytesIO(cover_bytes))
-            iw, ih = img.get_size()
-            # fill: scale so the image covers the full panel, then crop the excess
-            scale  = max(W / iw, ART_H / ih)
-            new_w  = int(iw * scale)
-            new_h  = int(ih * scale)
-            img    = pygame.transform.smoothscale(img, (new_w, new_h))
-            ox     = (new_w - W)   // 2
-            oy     = (new_h - ART_H) // 2
-            screen.blit(img, (-ox, ART_Y - oy))
-        
-        except Exception:
-            pass  
-
-# Visualizer Panel
-def try_draw_visualizer(screen, wave_t, state):
-    # draw visualizer only if state does not have cover art data
-    if not state.get('cover_art'):
-        pygame.draw.rect(screen, ART_BG, (0, ART_Y, W, ART_H))
-
-        cell_w = W / N_BARS # width of one bar's slot (including gap)
-        bar_w  = max(1, int(cell_w) - 2)  # actual drawn bar width, 2px gap between bars
-        
-        
-        cy     = ART_Y + ART_H // 2 # vertical pivot point of the art panel, bars grow up & down from here
-        seg_h  = max(1, (ART_H // 2 - 6 - (N_SEGS - 1)) // N_SEGS) # height of each lit segment; subtract space for N_SEGS-1 gaps and a 6px margin
-        stride = seg_h + 1        # distance between segment tops (segment + 1px gap)
-
-        for i in range(N_BARS):
-            # give each bar a unique frequency and phase so they move independently
-            freq  = 1.2 + i * 0.15
-            phase = i * 0.55
-
-            # blend two sine waves so the motion looks less mechanical
-            # wave_t advances over time; result is always 0.0–1.0
-            amp = (abs(math.sin(wave_t * freq + phase)) * 0.7 +
-                   abs(math.sin(wave_t * freq * 0.6 + phase + 1.3)) * 0.3)
-
-            # how many segments to light up this frame (at least 1 so bars never vanish)
-            filled = max(1, int(amp * N_SEGS))
-            bx     = int(i * cell_w + 1)  # left edge of this bar
-
-            for s in range(N_SEGS):
-                # brightness ramps from 160 (bottom) to 255 (top) as s increases
-                v   = int(160 + s / max(1, N_SEGS - 1) * 95)
-                c   = (v, v, v) if s < filled else (12, 12, 14)  # lit vs dark grey
-
-                # upper half: segment s is drawn s+1 steps above centre (so s=0 is closest to cy)
-                pygame.draw.rect(screen, c, (bx, cy - (s + 1) * stride, bar_w, seg_h))
-
-                # lower half: mirrored reflection, dimmed to 1/6 brightness
-                dim = (v // 6, v // 6, v // 6) if s < filled else (4, 4, 5)
-                pygame.draw.rect(screen, dim, (bx, cy + s * stride, bar_w, seg_h))
 
 # Title Panel
 def draw_title_panel(screen,track_name,font_title,state):
@@ -267,10 +205,10 @@ def draw_frame(screen, fonts, state):
     screen.fill(BG)
 
     # will try to draw cover art but pass if byte array is corrupted
-    try_draw_cover_art(screen,state)
+    cover_art_loader.try_draw_cover_art(screen,state)
 
     # will try to draw visualizer otherwise
-    try_draw_visualizer(screen,wave_t,state)
+    cover_art_loader.try_draw_visualizer(screen,wave_t,state)
 
     # title
     draw_title_panel(screen,track_name,f_title,state)
