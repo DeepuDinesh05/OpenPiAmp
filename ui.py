@@ -61,6 +61,9 @@ SEEK_BG    = (20,  32,   20)
 VOL_BG     = (20,  32,   20)
 BORDER     = (30,  42,   30)
 
+# button roundness (corner radius in px, 0 = square corners)
+BTN_RADIUS = 0
+
 
 # -------------- #
 #    Helpers
@@ -73,7 +76,7 @@ def fmt(s):
 
 # bevel look for button
 def _bevel(surf, rect, face, hi, sh):
-    pygame.draw.rect(surf, face, rect)
+    pygame.draw.rect(surf, face, rect, border_radius=BTN_RADIUS)
     x, y, w, h = rect
     pygame.draw.line(surf, hi, (x, y), (x + w - 2, y))
     pygame.draw.line(surf, hi, (x, y), (x, y + h - 2))

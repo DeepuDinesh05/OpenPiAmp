@@ -1,0 +1,96 @@
+<!-- HTML Based Theme Editor For OpenPiAmp -->
+<!-- Uses Bootstrap for styling -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Theme Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/lux/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  
+  <body>
+
+    <nav class="navbar navbar-dark bg-black mb-4">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Theme Editor</span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- live preview -->
+        <div class="col-md-5 text-center">
+          <canvas id="preview" class="border rounded shadow-sm"></canvas>
+          <div class="form-text mt-2">Live preview, redraws on any control change.</div>
+        </div>
+
+        <!-- controls -->
+        <div class="col-md-7">
+
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white fw-bold">Screen</div>
+            <div class="card-body row g-3">
+              <div class="col-6">
+                <label class="form-label" for="presetSelect">Size preset</label>
+                <select id="presetSelect" class="form-select"></select>
+              </div>
+              <div class="col-6">
+                <label class="form-label" for="orientationSelect">Orientation</label>
+                <select id="orientationSelect" class="form-select">
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="coverArtMode">Cover art</label>
+                <select id="coverArtMode" class="form-select">
+                  <option value="fill">Fill (crop)</option>
+                  <option value="bars">Bars (letterbox)</option>
+                  <option value="stretch">Stretch</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white fw-bold">Button</div>
+            <div class="card-body">
+              <label class="form-label" for="radiusRange">Corner radius: <span id="radiusValue">0</span>px</label>
+              <input type="range" class="form-range" id="radiusRange" min="0" max="30" step="1">
+            </div>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white fw-bold">Palette</div>
+            <div class="card-body">
+              <div id="paletteGrid" class="row row-cols-2 row-cols-lg-3 g-2"></div>
+            </div>
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white fw-bold">Actions</div>
+            <div class="card-body d-flex flex-wrap gap-2">
+              <input type="file" id="loadInput" accept="application/json" class="d-none">
+              <input type="file" id="trackInput" accept="audio/*" class="d-none">
+              <button id="loadBtn"  class="btn btn-warning">Load theme.json</button>
+              <button id="saveBtn"  class="btn btn-success">Save theme.json</button>
+              <button id="trackBtn" class="btn btn-info">Load Track</button>
+              <button id="resetBtn" class="btn btn-danger">Reset</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center text-muted py-4 mt-4 border-top">
+      <small>OpenPiAmp Theme Editor</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="jsmediatags.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

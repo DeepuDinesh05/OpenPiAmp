@@ -1,0 +1,24 @@
+/* device-style frame around the preview canvas */
+#preview {
+    background: #000;
+    image-rendering: pixelated;
+    max-width: 100%;
+}
+
+.swatch-label {
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+.swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swatch-row input[type="color"] {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--bs-border-color);
+}
