@@ -21,18 +21,18 @@ clock  = pygame.time.Clock()
 
 # init default state
 state = {
-    'wave_t':      0.0,
     'track_name':  "-",
+    'wave_t':      0.0,
     'pos_s':       2.0,
     'dur':         265.0,
     'volume':      0.7,
     'track_idx':   0,
-    'track_count': 0,
+    'scroll_x' :   0,
     'is_playing':  True,
     'shuffle':     False,
     'repeat':      False,
-    'scroll_x' :   0,
-    'btn_pressed': None
+    'btn_pressed': None,
+    'cover_art' :  None
 }
 
 # scan music directory and init state with actual music data
