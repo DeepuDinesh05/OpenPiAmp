@@ -1,6 +1,4 @@
-// Theme builder functionality
-// Functionality takes closest possible approach to what we do with pygame
-// Math needs to be tested
+// Theme builder mirrors ui.py draw calls on an HTML5 Canvas for live preview
 
 // fallback used when assets/theme.json can't be fetched (e.g. opened via file://)
 // keep this in sync with assets/theme.json
@@ -73,12 +71,45 @@ const loadInput          = document.getElementById('loadInput');
 const trackInput         = document.getElementById('trackInput');
 const coverArtModeSelect    = document.getElementById('coverArtMode');
 const noCoverBehaviorSelect = document.getElementById('noCoverBehavior');
+const tapeInput             = document.getElementById('tapeInput');
 
 // -------------- //
 //   Track state
 // -------------- //
 const track = { title: 'Sample Track Title', coverArt: null };
 
+// -------------- //
+//  Cassette state
+// -------------- //
+let tapeImg = null;
+
+// loads a user-picked image file into tapeImg, replacing the previous one
+function setCassetteImage(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+        if (tapeImg && tapeImg._url) URL.revokeObjectURL(tapeImg._url);
+        img._url = url;
+        tapeImg = img;
+        document.getElementById('tapeBtnLabel').textContent = file.name;
+        if (!animFrame) drawPreview();
+    };
+    img.onerror = () => URL.revokeObjectURL(url);
+    img.src = url;
+}
+
+// try to auto-load the bundled asset only works when served (not file://)
+function tryAutoLoadTape() {
+    if (window.location.protocol === 'file:') return;
+    const img = new Image();
+    img.onload = () => {
+        tapeImg = img;
+        if (!animFrame) drawPreview();
+    };
+    img.src = '../cassettetape.png';
+}
+
+// reads ID3 tags from an audio file and updates track.title / track.coverArt
 function loadTrack(file) {
     jsmediatags.read(file, {
         onSuccess: tag => {
@@ -116,10 +147,12 @@ function loadTrack(file) {
 // -------------- //
 const rgb = ([r, g, b]) => `rgb(${r},${g},${b})`;
 
+// converts [R,G,B] array to '#rrggbb' for use in color input values
 function rgbToHex([r, g, b]) {
     return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
+// converts '#rrggbb' back to [R,G,B] when a color picker fires
 function hexToRgb(hex) {
     const n = parseInt(hex.slice(1), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -188,6 +221,7 @@ function computeLayout(W, H) {
 let waveT     = 0;
 let animFrame = null;
 
+// starts the rAF loop that advances waveT and redraws each frame
 function startViz() {
     if (animFrame) return;
     let last = null;
@@ -200,12 +234,13 @@ function startViz() {
     animFrame = requestAnimationFrame(step);
 }
 
+// cancels the animation loop and resets waveT to zero
 function stopViz() {
     if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
     waveT = 0;
 }
 
-// mirrors ui.py's try_draw_visualizer() — only called when no cover art is loaded
+// mirrors ui.py's try_draw_visualizer() only called when no cover art is loaded
 function drawVisualizer(W, panel) {
     const p   = theme.palette;
     const { n_bars, n_segs } = theme.visualizer;
@@ -240,6 +275,27 @@ function drawVisualizer(W, panel) {
     }
 }
 
+// mirrors try_draw_tape() static image centered/fitted in the art panel
+function drawTape(W, panel) {
+    const p = theme.palette;
+    ctx.fillStyle = rgb(p.ART_BG);
+    ctx.fillRect(0, panel.art.y, W, panel.art.h);
+
+    if (tapeImg) {
+        const iw = tapeImg.naturalWidth, ih = tapeImg.naturalHeight;
+        const scale = Math.min(W / iw, panel.art.h / ih);
+        const dw = iw * scale, dh = ih * scale;
+        const dx = (W - dw) / 2, dy = panel.art.y + (panel.art.h - dh) / 2;
+        ctx.drawImage(tapeImg, dx, dy, dw, dh);
+    } else {
+        ctx.fillStyle = rgb(theme.palette.DIM);
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('[ load cassette image ]', W / 2, panel.art.y + panel.art.h / 2);
+    }
+}
+
 // start/stop the animation loop based on current track + behavior setting
 function updateVizState() {
     const needsAnim = !track.coverArt && theme.cover_art.no_cover_behavior === 'visualizer';
@@ -250,6 +306,7 @@ function updateVizState() {
 // -------------- //
 //   Drawing
 // -------------- //
+// builds a rounded-rectangle path on ctx without stroking or filling
 function pathRoundRect(x, y, w, h, r) {
     r = Math.min(r, w / 2, h / 2);
     ctx.beginPath();
@@ -316,6 +373,7 @@ function drawBar(rect, progress, bg) {
     ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
 }
 
+// renders the full player UI onto the canvas using current theme + track state
 function drawPreview() {
     const { w: W, h: H } = getDims();
     const p = theme.palette;
@@ -324,7 +382,7 @@ function drawPreview() {
     ctx.fillStyle = rgb(p.BG);
     ctx.fillRect(0, 0, W, H);
 
-    // art panel — real cover art if loaded, otherwise placeholder
+    // art panel real cover art if loaded, otherwise placeholder
     ctx.fillStyle = rgb(p.ART_BG);
     ctx.fillRect(0, panel.art.y, W, panel.art.h);
     if (track.coverArt) {
@@ -356,9 +414,7 @@ function drawPreview() {
     } else if (theme.cover_art.no_cover_behavior === 'visualizer') {
         drawVisualizer(W, panel);
     } else {
-        // cassette tape placeholder — black until implemented
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, panel.art.y, W, panel.art.h);
+        drawTape(W, panel);
     }
 
     // title panel
@@ -470,14 +526,17 @@ const LAYOUT_SECTIONS = [
     },
 ];
 
+// reads a dot-path value from theme.layout (e.g. 'ctrl_buttons.prev.x')
 const getLayoutVal = path => path.split('.').reduce((o, k) => o[k], theme.layout);
 
+// writes a value into theme.layout via dot-path
 function setLayoutVal(path, val) {
     const keys = path.split('.');
     const obj  = keys.slice(0, -1).reduce((o, k) => o[k], theme.layout);
     obj[keys[keys.length - 1]] = val;
 }
 
+// builds the accordion DOM structure once at init; call syncLayoutControls() to update values
 function buildLayoutControls() {
     const acc = document.getElementById('layoutAccordion');
     acc.innerHTML = '';
@@ -517,6 +576,7 @@ function buildLayoutControls() {
     });
 }
 
+// updates slider values from the current theme without rebuilding the DOM
 function syncLayoutControls() {
     document.querySelectorAll('input.layout-ctrl').forEach(input => {
         const val = getLayoutVal(input.dataset.path);
@@ -529,6 +589,7 @@ function syncLayoutControls() {
 // -------------- //
 //   Controls
 // -------------- //
+// sets canvas pixel dimensions to the active preset and scales it up via CSS for readability
 function resizeCanvas() {
     const { w: W, h: H } = getDims();
     canvas.width = W;
@@ -539,6 +600,7 @@ function resizeCanvas() {
     canvas.style.height = `${H * scale}px`;
 }
 
+// fills the preset dropdown from theme.screen.presets and selects the active one
 function populatePresetSelect() {
     presetSelect.innerHTML = '';
     for (const p of theme.screen.presets) {
@@ -550,6 +612,7 @@ function populatePresetSelect() {
     presetSelect.value = theme.screen.preset;
 }
 
+// builds colour picker swatches from theme.palette, wiring each to a live redraw
 function populatePalette() {
     paletteGrid.innerHTML = '';
     for (const key of Object.keys(theme.palette)) {
@@ -570,6 +633,7 @@ function populatePalette() {
     });
 }
 
+// syncs every control on the page to match the current theme object
 function populateControls() {
     populatePresetSelect();
     orientationSelect.value        = theme.screen.orientation;
@@ -581,6 +645,7 @@ function populateControls() {
     syncLayoutControls();
 }
 
+// resizes the canvas then redraws; called when preset or orientation changes
 function refresh() {
     resizeCanvas();
     drawPreview();
@@ -614,6 +679,13 @@ radiusRange.addEventListener('input', () => {
 
 document.getElementById('loadBtn').addEventListener('click',  () => loadInput.click());
 document.getElementById('trackBtn').addEventListener('click', () => trackInput.click());
+document.getElementById('tapeBtn').addEventListener('click',  () => tapeInput.click());
+
+tapeInput.addEventListener('change', () => {
+    const file = tapeInput.files[0];
+    if (file) setCassetteImage(file);
+    tapeInput.value = '';
+});
 
 trackInput.addEventListener('change', () => {
     const file = trackInput.files[0];
@@ -668,6 +740,7 @@ if (window.location.protocol === 'file:') {
     resizeCanvas();
     updateVizState();
 } else {
+    tryAutoLoadTape();
     fetch('../theme.json')
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(json => { theme = json; })

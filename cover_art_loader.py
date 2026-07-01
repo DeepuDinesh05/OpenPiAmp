@@ -1,6 +1,7 @@
 import math
 import pygame
 import io
+from pathlib import Path
 
 from config import *
 
@@ -133,3 +134,26 @@ def try_draw_visualizer(screen, wave_t, state):
                 # lower half: mirrored reflection, dimmed to 1/6 brightness
                 dim = (v // 6, v // 6, v // 6) if s < filled else (4, 4, 5)
                 pygame.draw.rect(screen, dim, (bx, cy + s * stride, bar_w, seg_h))
+
+_tape_img = None  # cached scaled surface
+
+# Cassette Tape Panel: draw static img
+# To be replaced with animated implementation soon
+def try_draw_tape(screen, _, state):
+    global _tape_img
+
+    if state.get('cover_art'):
+        return
+
+    pygame.draw.rect(screen, ART_BG, (0, ART_Y, W, ART_H))
+
+    if _tape_img is None:
+        src = pygame.image.load(
+            str(Path(__file__).parent / 'assets' / 'cassettetape.png')
+        ).convert_alpha()
+        iw, ih = src.get_size()
+        scale   = min(W / iw, ART_H / ih)
+        _tape_img = pygame.transform.smoothscale(src, (int(iw * scale), int(ih * scale)))
+
+    iw, ih = _tape_img.get_size()
+    screen.blit(_tape_img, ((W - iw) // 2, ART_Y + (ART_H - ih) // 2))

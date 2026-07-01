@@ -208,7 +208,9 @@ def draw_frame(screen, fonts, state):
     cover_art_loader.try_draw_cover_art(screen,state)
 
     # will try to draw visualizer otherwise
-    cover_art_loader.try_draw_visualizer(screen,wave_t,state)
+    # cover_art_loader.try_draw_visualizer(screen,wave_t,state)
+    # placeholder till theme loader is implemented
+    cover_art_loader.try_draw_tape(screen, wave_t, state)
 
     # title
     draw_title_panel(screen,track_name,f_title,state)
