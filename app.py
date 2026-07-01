@@ -1,13 +1,18 @@
 import pygame
 import random
+import os
 
 import ui
 from config import *
 from music_loader import *
 
+if USE_FRAMEBUFFER:
+    os.environ.setdefault("SDL_VIDEODRIVER", "fbdev")
+    os.environ.setdefault("SDL_FBDEV", FRAMEBUFFER_DEVICE)
 
 pygame.init()
 pygame.display.set_caption("OpenPiAmp")
+pygame.mouse.set_visible(not HIDE_CURSOR)
 
 fonts = {
     'f_title': pygame.font.Font(None, 22),
@@ -16,7 +21,7 @@ fonts = {
     'f_small': pygame.font.Font(None, 15),
 }
 
-screen = pygame.display.set_mode((ui.W, ui.H))
+screen = pygame.display.set_mode((ui.W, ui.H), pygame.FULLSCREEN if FULLSCREEN else 0)
 clock  = pygame.time.Clock()
 
 # init default state

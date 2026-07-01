@@ -8,6 +8,16 @@ SCREEN_HEIGHT = 320
 FPS = 60
 
 # -------------- #
+# Display Target
+# -------------- #
+# On the Pi, set USE_FRAMEBUFFER = True to render directly to the SPI LCD
+# instead of HDMI. Leave False for windowed dev testing.
+USE_FRAMEBUFFER = True
+FRAMEBUFFER_DEVICE = "/dev/fb1"
+FULLSCREEN = True
+HIDE_CURSOR = True
+
+# -------------- #
 # Music Settings
 # -------------- #
 SUPPORTED_EXTENSIONS = ('*.mp3', '*.flac', '*.ogg', '*.wav')
