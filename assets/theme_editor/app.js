@@ -14,7 +14,7 @@ const DEFAULT_THEME = {
         ]
     },
     button: { radius: 0 },
-    cover_art: { mode: "fill", no_cover_behavior: "visualizer" },
+    cover_art: { mode: "fill" },
     visualizer: { n_bars: 24, n_segs: 16 },
     layout: {
         panels: { art: 0.54375, title: 0.06875, seek: 0.075, ctrl: 0.18125 },
@@ -69,45 +69,12 @@ const radiusValue       = document.getElementById('radiusValue');
 const paletteGrid        = document.getElementById('paletteGrid');
 const loadInput          = document.getElementById('loadInput');
 const trackInput         = document.getElementById('trackInput');
-const coverArtModeSelect    = document.getElementById('coverArtMode');
-const noCoverBehaviorSelect = document.getElementById('noCoverBehavior');
-const tapeInput             = document.getElementById('tapeInput');
+const coverArtModeSelect = document.getElementById('coverArtMode');
 
 // -------------- //
 //   Track state
 // -------------- //
 const track = { title: 'Sample Track Title', coverArt: null };
-
-// -------------- //
-//  Cassette state
-// -------------- //
-let tapeImg = null;
-
-// loads a user-picked image file into tapeImg, replacing the previous one
-function setCassetteImage(file) {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-        if (tapeImg && tapeImg._url) URL.revokeObjectURL(tapeImg._url);
-        img._url = url;
-        tapeImg = img;
-        document.getElementById('tapeBtnLabel').textContent = file.name;
-        if (!animFrame) drawPreview();
-    };
-    img.onerror = () => URL.revokeObjectURL(url);
-    img.src = url;
-}
-
-// try to auto-load the bundled asset only works when served (not file://)
-function tryAutoLoadTape() {
-    if (window.location.protocol === 'file:') return;
-    const img = new Image();
-    img.onload = () => {
-        tapeImg = img;
-        if (!animFrame) drawPreview();
-    };
-    img.src = '../cassettetape.png';
-}
 
 // reads ID3 tags from an audio file and updates track.title / track.coverArt
 function loadTrack(file) {
@@ -275,32 +242,10 @@ function drawVisualizer(W, panel) {
     }
 }
 
-// mirrors try_draw_tape() static image centered/fitted in the art panel
-function drawTape(W, panel) {
-    const p = theme.palette;
-    ctx.fillStyle = rgb(p.ART_BG);
-    ctx.fillRect(0, panel.art.y, W, panel.art.h);
-
-    if (tapeImg) {
-        const iw = tapeImg.naturalWidth, ih = tapeImg.naturalHeight;
-        const scale = Math.min(W / iw, panel.art.h / ih);
-        const dw = iw * scale, dh = ih * scale;
-        const dx = (W - dw) / 2, dy = panel.art.y + (panel.art.h - dh) / 2;
-        ctx.drawImage(tapeImg, dx, dy, dw, dh);
-    } else {
-        ctx.fillStyle = rgb(theme.palette.DIM);
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('[ load cassette image ]', W / 2, panel.art.y + panel.art.h / 2);
-    }
-}
-
-// start/stop the animation loop based on current track + behavior setting
+// start/stop the animation loop based on whether cover art is loaded
 function updateVizState() {
-    const needsAnim = !track.coverArt && theme.cover_art.no_cover_behavior === 'visualizer';
-    needsAnim ? startViz() : stopViz();
-    if (!needsAnim) drawPreview();
+    !track.coverArt ? startViz() : stopViz();
+    if (track.coverArt) drawPreview();
 }
 
 // -------------- //
@@ -411,10 +356,8 @@ function drawPreview() {
         ctx.clip();
         ctx.drawImage(img, dx, dy, dw, dh);
         ctx.restore();
-    } else if (theme.cover_art.no_cover_behavior === 'visualizer') {
-        drawVisualizer(W, panel);
     } else {
-        drawTape(W, panel);
+        drawVisualizer(W, panel);
     }
 
     // title panel
@@ -639,8 +582,7 @@ function populateControls() {
     orientationSelect.value        = theme.screen.orientation;
     radiusRange.value              = theme.button.radius;
     radiusValue.textContent        = theme.button.radius;
-    coverArtModeSelect.value        = theme.cover_art.mode;
-    noCoverBehaviorSelect.value     = theme.cover_art.no_cover_behavior;
+    coverArtModeSelect.value = theme.cover_art.mode;
     populatePalette();
     syncLayoutControls();
 }
@@ -666,11 +608,6 @@ coverArtModeSelect.addEventListener('change', () => {
     drawPreview();
 });
 
-noCoverBehaviorSelect.addEventListener('change', () => {
-    theme.cover_art.no_cover_behavior = noCoverBehaviorSelect.value;
-    updateVizState();
-});
-
 radiusRange.addEventListener('input', () => {
     theme.button.radius = Number(radiusRange.value);
     radiusValue.textContent = theme.button.radius;
@@ -679,13 +616,6 @@ radiusRange.addEventListener('input', () => {
 
 document.getElementById('loadBtn').addEventListener('click',  () => loadInput.click());
 document.getElementById('trackBtn').addEventListener('click', () => trackInput.click());
-document.getElementById('tapeBtn').addEventListener('click',  () => tapeInput.click());
-
-tapeInput.addEventListener('change', () => {
-    const file = tapeInput.files[0];
-    if (file) setCassetteImage(file);
-    tapeInput.value = '';
-});
 
 trackInput.addEventListener('change', () => {
     const file = trackInput.files[0];
@@ -740,7 +670,6 @@ if (window.location.protocol === 'file:') {
     resizeCanvas();
     updateVizState();
 } else {
-    tryAutoLoadTape();
     fetch('../theme.json')
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(json => { theme = json; })

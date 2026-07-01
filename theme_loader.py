@@ -1,5 +1,6 @@
 import json
 
+# returns dict with color and position consts from theme.json file
 def read_theme(theme_path):
     with open(theme_path, 'r') as f:
         data = json.load(f)
@@ -58,8 +59,7 @@ def read_theme(theme_path):
         # button
         'btn_radius': data['button']['radius'],
         # cover art / visualizer
-        'cover_art_mode':    data['cover_art']['mode'],
-        'no_cover_behavior': data['cover_art']['no_cover_behavior'],
+        'cover_art_mode': data['cover_art']['mode'],
         'n_bars': data['visualizer']['n_bars'],
         'n_segs': data['visualizer']['n_segs'],
         # panels

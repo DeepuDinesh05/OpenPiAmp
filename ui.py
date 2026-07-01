@@ -144,7 +144,8 @@ def draw_control_panel(screen, font_button, font_general, volume, is_playing, st
     _btn(screen, btn_rpt, "RPT", font_general, active=state.get('repeat',  False))
 
     vol_label = font_general.render("VOL", True, DIM)
-    screen.blit(vol_label, (84, VOL_Y + (VOL_H - vol_label.get_height()) // 2))
+    vol_lx = (btn_rpt.right + vol_r.x - vol_label.get_width()) // 2
+    screen.blit(vol_label, (vol_lx, VOL_Y + (VOL_H - vol_label.get_height()) // 2))
 
     _bar(screen, vol_r, volume, VOL_BG)
     _btn(screen, btn_vol_minus, "-", font_general)
@@ -166,7 +167,7 @@ def draw_frame(screen, fonts, state):
     screen.fill(BG)
 
     cover_art_loader.try_draw_cover_art(screen, state, cur_theme)
-    cover_art_loader.try_draw_tape(screen, wave_t, state, cur_theme)
+    cover_art_loader.try_draw_visualizer(screen, wave_t, state, cur_theme)
 
     draw_title_panel(screen, track_name, f_title, state)
     seek_bar(screen, f_time, pos_s, dur)
