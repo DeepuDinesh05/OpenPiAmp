@@ -2,10 +2,10 @@ import pygame
 import random
 import os
 
-import ui
-import display_driver
+import src.ui as ui
+import src.display_driver as display_driver
 from config import *
-from music_loader import *
+from src.music_loader import *
 
 if USE_FRAMEBUFFER:
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")

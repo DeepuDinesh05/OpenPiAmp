@@ -2,8 +2,8 @@ import math
 import pygame
 import io
 
-import cover_art_loader
-import theme_loader
+import src.cover_art_loader as cover_art_loader
+import src.theme_loader as theme_loader
 from config import CURRENT_THEME
 
 cur_theme = theme_loader.read_theme(CURRENT_THEME)
