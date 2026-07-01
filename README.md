@@ -8,11 +8,6 @@
 - [Custom Themes](#custom-themes)
 - [To Do](#to-do)
 
-# Dependencies
-Install the following packages:
-```
-pip install pygame mutagen
-```
 # Hardware
 The hardware setup I plan to build for is the follow:
 - Raspberry Pi Zero 2 W
@@ -23,6 +18,20 @@ Currently, this is in testing stage while I get the screen drivers and other har
 
 ```
 python app.py
+```
+
+## Virtual Environment (Pi)
+On the Pi, set up a venv inside the project folder so dependencies stay isolated:
+
+```bash
+cd OpenPiAmp
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pygame mutagen evdev
+```
+Reactivate it in future sessions with:
+```bash
+source .venv/bin/activate
 ```
 
 Default music directory provided is the ~/Music path, which on windows can be accessed by going to File Explorer > Music folder. On the Pi, it will be expected to make a folder called Music at the root.
