@@ -1,5 +1,12 @@
 # OpenPiAmp
-(WIP) Open source WinAmp style music player for raspberry pi project
+(WIP) Open source WinAmp style music player for Raspberry Pi Zero 2 W.  Currently being tested on windows before port.
+
+## Table of Contents
+- [Dependencies](#dependencies)
+- [Hardware](#hardware)
+- [Installation](#installation)
+- [Custom Themes](#custom-themes)
+- [To Do](#to-do)
 
 # Dependencies
 Install the following packages:
@@ -19,6 +26,15 @@ python app.py
 ```
 
 Default music directory provided is the ~/Music path, which on windows can be accessed by going to File Explorer > Music folder. On the Pi, it will be expected to make a folder called Music at the root.
+
+# Custom Themes
+
+- A HTML/JS based theme editor is provided in the ```assets/theme_editor``` folder. 
+> **⚠️ Disclaimer:** The JS logic behind this tool was built with agentic help and will be rewritten at a later stage.
+
+- Open ```index.html```in any browser (tested on chrome) and save the theme using the action button provided.
+- Name your theme appropriately and place it in the assets folder.
+- Edit the config.py file to use your theme of choice on startup.
 
 # To Do
 - Port to Pi

@@ -49,7 +49,7 @@ def try_draw_visualizer(screen, wave_t, state, theme):
 
         for s in range(N_SEGS):
             v   = int(160 + s / max(1, N_SEGS - 1) * 95)
-            c   = (v, v, v) if s < filled else (12, 12, 14)
+            c   = (v, v, v) if s < filled else theme['ART_BG']
             pygame.draw.rect(screen, c,   (bx, cy - (s + 1) * stride, bar_w, seg_h))
-            dim = (v // 6, v // 6, v // 6) if s < filled else (4, 4, 5)
+            dim = (v // 6, v // 6, v // 6) if s < filled else theme['ART_BG']
             pygame.draw.rect(screen, dim, (bx, cy + s * stride,       bar_w, seg_h))
