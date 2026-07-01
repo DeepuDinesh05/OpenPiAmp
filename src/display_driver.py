@@ -10,18 +10,26 @@ def make_surface(width, height):
 
 
 def push(surface, fb_file):
+    # pitch = bytes per row as laid out in memory
+    # row_bytes = bytes per row the framebuffer actually expects (width * 2 for 16bpp).
     pitch = surface.get_pitch()
     row_bytes = surface.get_width() * 2
     raw = surface.get_buffer().raw
 
+    # framebuffer devices have no concept of a write cursor across frames
+    # always start writing from the first byte.
     fb_file.seek(0)
 
     if pitch == row_bytes:
+        # common case: no padding, so the whole buffer can be written in one go
         fb_file.write(raw)
     else:
+        # padded case: strip the extra pad bytes from each row before writing
+        # prevents disoriented img
         mv = memoryview(raw)
         for y in range(surface.get_height()):
             start = y * pitch
             fb_file.write(mv[start:start + row_bytes])
-    
+
+    # force the write to prevent latency
     fb_file.flush()

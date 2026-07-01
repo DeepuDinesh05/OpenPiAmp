@@ -6,10 +6,6 @@ from evdev import *
 # wrapper class to convert touch input events using evdev (linux only lib) to pygame mouse inputs
 class TouchWrapper:
 
-    # -------------- #
-    #     Setup
-    # -------------- #
-
     def __init__(self, device_path, screen_w, screen_h,
                  x_min, x_max, y_min, y_max,
                  swap_xy=False, invert_x=False, invert_y=False):
@@ -44,10 +40,6 @@ class TouchWrapper:
     def start(self):
         self._thread.start()
 
-    # -------------- #
-    # Coordinate Mapping
-    # -------------- #
-
     def _scale(self, raw, raw_min, raw_max, out_max):
         # Linearly maps a raw ADC reading onto a 0..out_max-1 pixel coord.
         span = raw_max - raw_min
@@ -74,11 +66,15 @@ class TouchWrapper:
 
         return x, y
 
-    # -------------- #
-    #   Event Loop
-    # -------------- #
-
     def _run(self):
+        # BTN_TOUCH can arrive before its matching ABS_X/ABS_Y within the
+        # same touch-down report, so resolving position immediately on
+        # BTN_TOUCH would use the *previous* touch's coordinates. Instead,
+        # just flag what happened and wait for SYN_REPORT (end of this
+        # batch of updates) before reading position and posting the event.
+        down_pending = False
+        up_pending = False
+
         # for each event in produced kernel events in a row (X update,
         # Y update, pressure update)
         for event in self.device.read_loop():
@@ -91,15 +87,24 @@ class TouchWrapper:
                     self._raw_y = event.value
 
             elif event.type == ecodes.EV_KEY and event.code == ecodes.BTN_TOUCH:
-                # value 1 = finger down, 0 = finger lifted. 
+                # value 1 = finger down, 0 = finger lifted.
                 # Fire once per press/release to simulate real mouse click
-                pos = self._to_screen_pos()
                 if event.value == 1 and not self._touching:
                     self._touching = True
-                    pygame.event.post(pygame.event.Event(
-                        pygame.MOUSEBUTTONDOWN, pos=pos, button=1))
-                
+                    down_pending = True
+
                 elif event.value == 0 and self._touching:
                     self._touching = False
+                    up_pending = True
+
+            elif event.type == ecodes.EV_SYN and event.code == ecodes.SYN_REPORT:
+                # batch complete - safe to read the final x/y for this event
+                if down_pending:
                     pygame.event.post(pygame.event.Event(
-                        pygame.MOUSEBUTTONUP, pos=pos, button=1))
+                        pygame.MOUSEBUTTONDOWN, pos=self._to_screen_pos(), button=1))
+                    down_pending = False
+
+                if up_pending:
+                    pygame.event.post(pygame.event.Event(
+                        pygame.MOUSEBUTTONUP, pos=self._to_screen_pos(), button=1))
+                    up_pending = False
