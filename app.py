@@ -3,12 +3,12 @@ import random
 import os
 
 import ui
+import fb_output
 from config import *
 from music_loader import *
 
 if USE_FRAMEBUFFER:
-    os.environ.setdefault("SDL_VIDEODRIVER", "fbdev")
-    os.environ.setdefault("SDL_FBDEV", FRAMEBUFFER_DEVICE)
+    os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 pygame.init()
 pygame.display.set_caption("OpenPiAmp")
@@ -20,8 +20,18 @@ fonts = {
     'f_small': pygame.font.Font(None, 15),
 }
 
-screen = pygame.display.set_mode((ui.W, ui.H), pygame.FULLSCREEN if FULLSCREEN else 0)
-pygame.mouse.set_visible(not HIDE_CURSOR)
+if USE_FRAMEBUFFER:
+    # dummy driver still needs *a* display mode set for pygame's event/font
+    # subsystems; actual pixels go to fb_screen -> /dev/fb1, not this window.
+    pygame.display.set_mode((1, 1))
+    fb_screen = fb_output.make_surface(ui.W, ui.H)
+    fb_device = open(FRAMEBUFFER_DEVICE, "wb")
+    screen = fb_screen
+else:
+    screen = pygame.display.set_mode((ui.W, ui.H), pygame.FULLSCREEN if FULLSCREEN else 0)
+    pygame.mouse.set_visible(not HIDE_CURSOR)
+    fb_device = None
+
 clock  = pygame.time.Clock()
 
 # init default state
@@ -158,4 +168,11 @@ while running:
 
     ui.draw_frame(screen, fonts, state)
 
+    if fb_device is not None:
+        fb_output.push(screen, fb_device)
+    else:
+        pygame.display.flip()
+
+if fb_device is not None:
+    fb_device.close()
 pygame.quit()

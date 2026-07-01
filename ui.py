@@ -172,5 +172,3 @@ def draw_frame(screen, fonts, state):
     draw_title_panel(screen, track_name, f_title, state)
     seek_bar(screen, f_time, pos_s, dur)
     draw_control_panel(screen, f_btn, f_small, volume, is_playing, state)
-
-    pygame.display.flip()
