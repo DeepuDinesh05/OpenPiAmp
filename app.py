@@ -12,7 +12,6 @@ if USE_FRAMEBUFFER:
 
 pygame.init()
 pygame.display.set_caption("OpenPiAmp")
-pygame.mouse.set_visible(not HIDE_CURSOR)
 
 fonts = {
     'f_title': pygame.font.Font(None, 22),
@@ -22,6 +21,7 @@ fonts = {
 }
 
 screen = pygame.display.set_mode((ui.W, ui.H), pygame.FULLSCREEN if FULLSCREEN else 0)
+pygame.mouse.set_visible(not HIDE_CURSOR)
 clock  = pygame.time.Clock()
 
 # init default state
