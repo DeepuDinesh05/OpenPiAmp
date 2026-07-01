@@ -50,5 +50,5 @@ REV_DUR = 15
 # -------------- #
 TITLE_SCROLL_SPEED = 20
 VOLUME_STEP = 0.1
-CURRENT_THEME = Path("assets") / "theme_P.json"
+CURRENT_THEME = Path("assets") / "theme_L.json"
 

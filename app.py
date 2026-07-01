@@ -7,6 +7,8 @@ import src.display_driver as display_driver
 from config import *
 from src.music_loader import *
 
+# SDL has no video driver that can reach /dev/fb1, fbdev doesn't exist in SDL2 
+# So we run SDL_VIDEODRIVER=dummy just for pygame's surfaces/fonts and write raw image data to framebuffer
 if USE_FRAMEBUFFER:
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
@@ -185,4 +187,13 @@ except KeyboardInterrupt:
 
 if fb_device is not None:
     fb_device.close()
+
+    # Force console driver (fbcon) to redraw tty1 over it by sending a terminal
+    # reset sequence straight to the vt mapped onto this screen.
+    try:
+        with open("/dev/tty1", "w") as tty1:
+            tty1.write("\033c")
+    except OSError as e:
+        print(f"(couldn't repaint console on exit: {e})")
+
 pygame.quit()
