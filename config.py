@@ -26,16 +26,19 @@ USE_TOUCH = True
 TOUCH_DEVICE = "/dev/input/event0"
 
 
-# Corner-calibrated via evtest 
-# Current values tested for LCD-Show screen orientation tool rotate.sh set to portrait
-# Calibration values below are from `evtest /dev/input/event0` on the
-# ADS7846 touch controller (see /proc/bus/input/devices to confirm device).
-TOUCH_X_MIN, TOUCH_X_MAX = 220, 3830
-TOUCH_Y_MIN, TOUCH_Y_MAX = 160, 3700
-
-TOUCH_SWAP_XY  = False
-TOUCH_INVERT_X = False
-TOUCH_INVERT_Y = False
+# evtest corner-calibration ran to figure out these values
+TOUCH_CALIBRATION = {
+    'portrait': {
+        'x_min': 220, 'x_max': 3830,
+        'y_min': 160, 'y_max': 3700,
+        'swap_xy': False, 'invert_x': False, 'invert_y': False,
+    },
+    'landscape': {
+        'x_min': 260, 'x_max': 3800,
+        'y_min': 320, 'y_max': 3850,
+        'swap_xy': True, 'invert_x': True, 'invert_y': False,
+    },
+}
 
 # -------------- #
 # Music Settings

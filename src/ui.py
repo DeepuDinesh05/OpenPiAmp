@@ -13,6 +13,7 @@ cur_theme = theme_loader.read_theme(CURRENT_THEME)
 # -------------- #
 W = cur_theme['W']
 H = cur_theme['H']
+ORIENTATION = cur_theme['orientation']
 
 ART_Y   = cur_theme['art_y'];   ART_H   = cur_theme['art_h']
 TITLE_Y = cur_theme['title_y']; TITLE_H = cur_theme['title_h']

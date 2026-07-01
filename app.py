@@ -24,7 +24,7 @@ fonts = {
 
 if USE_FRAMEBUFFER:
     # dummy driver still needs *a* display mode set for pygame's event/font
-    # subsystems; actual pixels go to fb_screen -> /dev/fb1, not this window.
+    # subsystems; actual pixels go to fb_screen (/dev/fb1)
     pygame.display.set_mode((1, 1))
     fb_screen = display_driver.make_surface(ui.W, ui.H)
     fb_device = open(FRAMEBUFFER_DEVICE, "wb")
@@ -36,10 +36,11 @@ else:
 
 if USE_TOUCH:
     import src.touch_input as touch_input
+    calib = TOUCH_CALIBRATION[ui.ORIENTATION]
     touch_bridge = touch_input.TouchWrapper(
         TOUCH_DEVICE, ui.W, ui.H,
-        TOUCH_X_MIN, TOUCH_X_MAX, TOUCH_Y_MIN, TOUCH_Y_MAX,
-        swap_xy=TOUCH_SWAP_XY, invert_x=TOUCH_INVERT_X, invert_y=TOUCH_INVERT_Y,
+        calib['x_min'], calib['x_max'], calib['y_min'], calib['y_max'],
+        swap_xy=calib['swap_xy'], invert_x=calib['invert_x'], invert_y=calib['invert_y'],
     )
     touch_bridge.start()
 

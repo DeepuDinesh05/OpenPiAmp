@@ -52,11 +52,13 @@ class TouchWrapper:
     def _to_screen_pos(self):
         # Converts the latest raw touch reading into a screen pixel (x, y),
         # applying whatever axis correction this panel/orientation needs.
-        x = self._scale(self._raw_x, self.x_min, self.x_max, self.screen_w)
-        y = self._scale(self._raw_y, self.y_min, self.y_max, self.screen_h)
-
+        # Does not support realtime orientation change.
+        raw_x, raw_y = self._raw_x, self._raw_y
         if self.swap_xy:
-            x, y = y, x
+            raw_x, raw_y = raw_y, raw_x
+
+        x = self._scale(raw_x, self.x_min, self.x_max, self.screen_w)
+        y = self._scale(raw_y, self.y_min, self.y_max, self.screen_h)
 
         if self.invert_x:
             x = self.screen_w - 1 - x
@@ -67,11 +69,8 @@ class TouchWrapper:
         return x, y
 
     def _run(self):
-        # BTN_TOUCH can arrive before its matching ABS_X/ABS_Y within the
-        # same touch-down report, so resolving position immediately on
-        # BTN_TOUCH would use the *previous* touch's coordinates. Instead,
-        # just flag what happened and wait for SYN_REPORT (end of this
-        # batch of updates) before reading position and posting the event.
+        # wait for SYN_REPORT at end of batch updates instead of reading position
+        # This prevents button clicks on previously chosen buttons
         down_pending = False
         up_pending = False
 
