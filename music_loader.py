@@ -8,31 +8,32 @@ from config import *
 def scan(folder, state):
     extensions = SUPPORTED_EXTENSIONS
     files = []
-    
+
     for ext in extensions:
         folder_pattern = os.path.join(folder,ext)
         # return all files for each support extension
         files += glob.glob(folder_pattern)
 
     tracks = sorted(files)
-    track_metadata = get_metadata(tracks[0])
-    
-    # set state to first clip
-    state['track_idx']   = 0
-    # fallback to filename if track name doesnt exist
-    state['track_name']  = track_metadata.get('title') or os.path.splitext(os.path.basename(tracks[0]))[0]
-    state['cover_art']   = track_metadata.get('image_data')
-    state['dur']         = track_metadata.get('duration') or 0.0
-    state['pos_s']       = 0.0
-    pygame.mixer.music.load(tracks[0])
-    pygame.mixer.music.play()
-    state['is_playing']  = True
 
+    if not tracks:
+        state['track_idx']   = 0
+        state['track_name']  = "No tracks found"
+        state['cover_art']   = None
+        state['dur']         = 0.0
+        state['pos_s']       = 0.0
+        state['is_playing']  = False
+        return tracks
+
+    load_track(tracks, state, 0)
     return tracks
 
 
 # load an actual track
 def load_track(tracks, state, current_track_index):
+    if not tracks:
+        return
+
     track_metadata = get_metadata(tracks[current_track_index])
     state['track_idx']   = current_track_index
     # fallback to filename if track name doesnt exist
@@ -46,6 +47,9 @@ def load_track(tracks, state, current_track_index):
 
 # next track helper
 def next_track(tracks, state):
+    if not tracks:
+        return
+
     # if repeat
     if state.get('repeat'):
         load_track(tracks, state, state['track_idx'])
@@ -61,6 +65,9 @@ def next_track(tracks, state):
 
 # prev track helper
 def prev_track(tracks, state):
+    if not tracks:
+        return
+
     # if shuffle
     if state.get('shuffle'):
         import random

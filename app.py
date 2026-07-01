@@ -3,7 +3,7 @@ import random
 import os
 
 import ui
-import fb_output
+import display_driver
 from config import *
 from music_loader import *
 
@@ -24,7 +24,7 @@ if USE_FRAMEBUFFER:
     # dummy driver still needs *a* display mode set for pygame's event/font
     # subsystems; actual pixels go to fb_screen -> /dev/fb1, not this window.
     pygame.display.set_mode((1, 1))
-    fb_screen = fb_output.make_surface(ui.W, ui.H)
+    fb_screen = display_driver.make_surface(ui.W, ui.H)
     fb_device = open(FRAMEBUFFER_DEVICE, "wb")
     screen = fb_screen
 else:
@@ -83,7 +83,7 @@ while running:
                 # print(state['is_playing'])
 
              # FF button
-            if ui.btn_ff.collidepoint(p):
+            if tracks and ui.btn_ff.collidepoint(p):
                 # trigger UI anim
                 state['btn_pressed'] = "ff"
 
@@ -99,7 +99,7 @@ while running:
                     pygame.mixer.music.play(start=new_pos)
 
              # REV button
-            if ui.btn_rev.collidepoint(p):
+            if tracks and ui.btn_rev.collidepoint(p):
                 # trigger UI anim
                 state['btn_pressed'] = "rev"
 
@@ -113,9 +113,6 @@ while running:
                 else:
                     state['pos_s'] = new_pos
                     pygame.mixer.music.play(start=new_pos)
-
-                state['pos_s'] = new_pos
-                pygame.mixer.music.play(start=new_pos)
             
             # Shuffle button
             elif ui.btn_shf.collidepoint(p):
@@ -169,7 +166,7 @@ while running:
     ui.draw_frame(screen, fonts, state)
 
     if fb_device is not None:
-        fb_output.push(screen, fb_device)
+        display_driver.push(screen, fb_device)
     else:
         pygame.display.flip()
 
