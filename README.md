@@ -1,5 +1,5 @@
 # OpenPiAmp
-(WIP) Open source WinAmp style music player for Raspberry Pi Zero 2 W.  Currently being tested on windows before port.
+(WIP) Open source WinAmp style music player for Raspberry Pi Zero 2 W.
 
 # Table of Contents
 - [Dependencies](#dependencies)
