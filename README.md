@@ -18,6 +18,7 @@ The hardware setup I plan to build for is as follows:
     - Drivers for these screens can be found here: 
         - https://github.com/katzenjens/lcd32 (Recommended)
         - https://github.com/goodtft/LCD-show (Old)
+- [SpotPear Audio Module for Pi Zero/2](https://www.aliexpress.com/item/1005008373870173.html?spm=a2g0o.order_list.order_list_main.5.2e541802kh3ZkB)
 
 # Installation
 
@@ -27,6 +28,40 @@ The hardware setup I plan to build for is as follows:
 ```bash
 bash con2fbmap_old_drivers.sh
 ``` 
+
+## Enabling GPIO PWM Audio (Spotpear Audio Amplifier)
+This audio amplifier uses the Raspberry Pi's built-in PWM audio output over the GPIO pins (GPIO 18 and GPIO 19). To enable it:
+
+### 1. Edit the boot configuration
+```bash
+sudo nano /boot/config.txt
+```
+Ensure the following lines are present:
+```text
+dtparam=audio=on
+dtoverlay=audremap,pins_18_19
+```
+If `dtparam=audio=off` exists, change it to `dtparam=audio=on`.
+
+### 2. Reboot
+```bash
+sudo reboot
+```
+
+### 3. Select the PWM audio output
+```bash
+sudo raspi-config
+```
+
+Navigate to:
+```text
+System Options -> Audio -> Headphones
+```
+
+### 4. Reboot again
+```bash
+sudo reboot
+```
 
 ## Virtual Environment (Pi)
 On the Pi, set up a venv inside the project folder to prevent dependency isolation errors:
