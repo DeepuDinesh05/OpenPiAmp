@@ -121,7 +121,5 @@ bash autoboot_uninstall.sh
 - Edit the config.py file to use your theme of choice on startup.
 
 # To Do
-- Port to Pi
-- Finalize audio components for audio playback on the Pi Zero 2
 - Figure out how to connect portable power source
 - Design 3D enclosure
